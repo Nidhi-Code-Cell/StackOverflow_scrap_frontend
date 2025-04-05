@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>StackOverflow Tag Trends</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Top StackOverflow Tags (Normalized)</h1>
+  <canvas id="tagChart" width="1000" height="500"></canvas>
+
+  <script>
+    fetch("https://yourusername.pythonanywhere.com/api/graphs")
+      .then(res => res.json())
+      .then(chartData => {
+        const ctx = document.getElementById("tagChart").getContext("2d");
+
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: chartData.labels,
+            datasets: chartData.datasets
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  boxWidth: 12,
+                  usePointStyle: true
+                }
+              },
+              title: {
+                display: true,
+                text: 'Top 10 StackOverflow Tags (Normalized Usage Over 2022–2024)'
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 1,
+                title: {
+                  display: true,
+                  text: 'Relative Frequency'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Year'
+                }
+              }
+            }
+          }
+        });
+      });
+  </script>
+</body>
+</html>
