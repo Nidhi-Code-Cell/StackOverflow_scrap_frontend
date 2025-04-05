@@ -1,79 +1,276 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>StackOverflow Tag Trends</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      text-align: center;
-    }
-    canvas {
-      margin-top: 30px;
-      max-width: 100%;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StackOverflow Tag Trends</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .chart-container {
+            position: relative;
+            height: 70vh;
+            width: 100%;
+        }
+        .legend-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 10px;
+            cursor: pointer;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border-radius: 3px;
+        }
+        .url-input {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .url-input input {
+            width: 60%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .url-input button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .url-input button:hover {
+            background-color: #45a049;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-  <h1>Top 10 StackOverflow Tags (Normalized Usage)</h1>
-  <canvas id="tagChart" width="1000" height="500"></canvas>
+    <div class="container">
+        <h1>StackOverflow Tag Trends (2022-2025)</h1>
+        
+        <div class="url-input">
+            <input type="text" id="apiUrl" value="https://nidhisu.pythonanywhere.com/api/graphs" placeholder="Enter API URL">
+            <button onclick="loadFromUrl()">Load Data</button>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="tagTrends"></canvas>
+        </div>
+        <div class="legend-container" id="customLegend"></div>
+        <div class="footer">
+            <p>Normalized frequency shows the relative popularity of each tag across years.</p>
+            <p>Due to CORS restrictions, this demo uses preloaded data. For live data, you'll need to implement CORS on your server.</p>
+        </div>
+    </div>
 
-  <script>
-    fetch("https://nidhisu.pythonanywhere.com/api/graphs")
-      .then(res => res.json())
-      .then(chartData => {
-        const ctx = document.getElementById("tagChart").getContext("2d");
+    <script>
+        // Preloaded data from the API response
+        const preloadedData = {
+            "datasets": [
+                {"borderColor":"hsl(0, 70%, 50%)","data":[0.4132064006481669,0.4219161434069273,0.1563702653433259,0.008507190601579907],"fill":false,"label":""},
+                {"borderColor":"hsl(235, 70%, 50%)","data":[0.4115197779319917,0.4455239417071478,0.13740458015267176,0.005551700208188758],"fill":false,"label":"python"},
+                {"borderColor":"hsl(58, 70%, 50%)","data":[0.4493573264781491,0.44781491002570695,0.09820051413881747,0.004627249357326478],"fill":false,"label":"reactjs"},
+                {"borderColor":"hsl(123, 70%, 50%)","data":[0.4770992366412214,0.42039258451472195,0.09869138495092694,0.003816793893129771],"fill":false,"label":"javascript"},
+                {"borderColor":"hsl(246, 70%, 50%)","data":[0.42457337883959045,0.4116040955631399,0.1583617747440273,0.005460750853242321],"fill":false,"label":"android"},
+                {"borderColor":"hsl(236, 70%, 50%)","data":[0.4176672384219554,0.43739279588336194,0.14493996569468268,0.0],"fill":false,"label":"typescript"},
+                {"borderColor":"hsl(77, 70%, 50%)","data":[0.38202247191011235,0.4419475655430712,0.16573033707865167,0.010299625468164793],"fill":false,"label":"java"},
+                {"borderColor":"hsl(237, 70%, 50%)","data":[0.2958015267175573,0.5505725190839694,0.15267175572519084,0.0009541984732824427],"fill":false,"label":"next.js"},
+                {"borderColor":"hsl(58, 70%, 50%)","data":[0.448443579766537,0.3959143968871595,0.14980544747081712,0.005836575875486381],"fill":false,"label":"flutter"},
+                {"borderColor":"hsl(141, 70%, 50%)","data":[0.46733668341708545,0.40100502512562813,0.12261306532663317,0.009045226130653266],"fill":false,"label":"c#"}
+            ],
+            "labels": [2022, 2023, 2024, 2025]
+        };
 
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: chartData.labels,  // [2022, 2023, 2024]
-            datasets: chartData.datasets
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'top',
-                labels: {
-                  boxWidth: 14,
-                  usePointStyle: true
+        let chart = null;
+
+        // Initialize chart with preloaded data
+        window.onload = function() {
+            createChart(preloadedData);
+        };
+
+        // Function to attempt loading from URL (likely won't work due to CORS)
+        async function loadFromUrl() {
+            const url = document.getElementById('apiUrl').value;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
                 }
-              },
-              title: {
-                display: true,
-                text: 'Normalized Frequency of Top 10 StackOverflow Tags (2022–2024)',
-                font: {
-                  size: 18
+                const data = await response.json();
+                
+                // Destroy previous chart if it exists
+                if (chart) {
+                    chart.destroy();
                 }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                max: 1,
-                title: {
-                  display: true,
-                  text: 'Normalized Frequency'
+                
+                // Clear legend
+                document.getElementById('customLegend').innerHTML = '';
+                
+                // Create new chart with fetched data
+                createChart(data);
+                
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                alert('Failed to load data from URL. CORS restrictions might be preventing access. Using preloaded data instead.');
+                
+                // Use preloaded data as fallback
+                if (chart) {
+                    chart.destroy();
                 }
-              },
-              x: {
-                title: {
-                  display: true,
-                  text: 'Year'
-                }
-              }
+                document.getElementById('customLegend').innerHTML = '';
+                createChart(preloadedData);
             }
-          }
-        });
-      })
-      .catch(error => {
-        document.body.innerHTML += `<p style="color:red;">Error loading chart data: ${error}</p>`;
-        console.error("Failed to load chart data:", error);
-      });
-  </script>
+        }
+
+        // Function to create chart
+        function createChart(data) {
+            const ctx = document.getElementById('tagTrends').getContext('2d');
+            
+            // Filter out any datasets with empty labels
+            const filteredDatasets = data.datasets.filter(dataset => dataset.label !== "");
+            
+            // Create the chart
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: filteredDatasets.map(dataset => ({
+                        label: dataset.label,
+                        data: dataset.data,
+                        borderColor: dataset.borderColor,
+                        backgroundColor: dataset.borderColor.replace('50%)', '90%)'),
+                        borderWidth: 3,
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        fill: false
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    return `${label}: ${(value * 100).toFixed(2)}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Year',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Normalized Frequency',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                callback: value => (value * 100).toFixed(0) + '%'
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+            
+            // Create custom legend
+            createCustomLegend(chart, filteredDatasets);
+        }
+        
+        // Function to create custom interactive legend
+        function createCustomLegend(chart, datasets) {
+            const legendContainer = document.getElementById('customLegend');
+            
+            datasets.forEach((dataset, index) => {
+                const legendItem = document.createElement('div');
+                legendItem.classList.add('legend-item');
+                
+                const colorBox = document.createElement('div');
+                colorBox.classList.add('legend-color');
+                colorBox.style.backgroundColor = dataset.borderColor;
+                
+                const labelText = document.createElement('span');
+                labelText.textContent = dataset.label;
+                
+                legendItem.appendChild(colorBox);
+                legendItem.appendChild(labelText);
+                
+                // Toggle visibility when clicking on legend item
+                legendItem.addEventListener('click', () => {
+                    const datasetIndex = chart.data.datasets.findIndex(ds => ds.label === dataset.label);
+                    if (datasetIndex !== -1) {
+                        chart.data.datasets[datasetIndex].hidden = !chart.data.datasets[datasetIndex].hidden;
+                        legendItem.style.opacity = chart.data.datasets[datasetIndex].hidden ? 0.5 : 1;
+                        chart.update();
+                    }
+                });
+                
+                legendContainer.appendChild(legendItem);
+            });
+        }
+    </script>
 </body>
 </html>
