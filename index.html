@@ -1,11 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>StackOverflow Tag Trends</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    canvas {
+      margin-top: 30px;
+      max-width: 100%;
+    }
+  </style>
 </head>
 <body>
-  <h1>Top StackOverflow Tags (Normalized)</h1>
+  <h1>Top 10 StackOverflow Tags (Normalized Usage)</h1>
   <canvas id="tagChart" width="1000" height="500"></canvas>
 
   <script>
@@ -17,22 +29,26 @@
         new Chart(ctx, {
           type: 'line',
           data: {
-            labels: chartData.labels,
+            labels: chartData.labels,  // [2022, 2023, 2024]
             datasets: chartData.datasets
           },
           options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
               legend: {
-                position: 'bottom',
+                position: 'top',
                 labels: {
-                  boxWidth: 12,
+                  boxWidth: 14,
                   usePointStyle: true
                 }
               },
               title: {
                 display: true,
-                text: 'Top 10 StackOverflow Tags (Normalized Usage Over 2022–2024)'
+                text: 'Normalized Frequency of Top 10 StackOverflow Tags (2022–2024)',
+                font: {
+                  size: 18
+                }
               }
             },
             scales: {
@@ -41,7 +57,7 @@
                 max: 1,
                 title: {
                   display: true,
-                  text: 'Relative Frequency'
+                  text: 'Normalized Frequency'
                 }
               },
               x: {
@@ -53,6 +69,10 @@
             }
           }
         });
+      })
+      .catch(error => {
+        document.body.innerHTML += `<p style="color:red;">Error loading chart data: ${error}</p>`;
+        console.error("Failed to load chart data:", error);
       });
   </script>
 </body>
