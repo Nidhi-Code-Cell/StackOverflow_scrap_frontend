@@ -127,17 +127,12 @@
                         display: false
                     },
                     tooltip: {
-                        mode: 'nearest',
+                        mode: 'dataset', // ⬅️ This shows tag tooltip only on line hover
                         intersect: false,
                         callbacks: {
                             label: function(context) {
-                                const label = context.dataset.label || '';
-                                const value = context.parsed.y;
-                                return `${label}: ${(value * 100).toFixed(2)}%`;
-                            },
-                            // NEW: Title shows tag name on hover
-                            title: function(context) {
-                                return context[0].dataset.label;
+                                const value = context.raw;
+                                return `${(value * 100).toFixed(2)}%`;
                             }
                         }
                     }
@@ -177,10 +172,11 @@
                     intersect: false
                 },
                 hover: {
-                    mode: 'dataset', // NEW: show label on line hover
+                    mode: 'dataset',
                     intersect: false
                 }
             }
+
         });
 
         createCustomLegend(chart, filteredDatasets);
