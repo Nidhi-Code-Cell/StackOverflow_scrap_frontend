@@ -92,95 +92,99 @@
                 return null;
             }
         }
-
-        // Function to create chart
-        async function createChart() {
-            const data = await fetchData();
-            if (!data) return;
-            
-            document.getElementById('loading').style.display = 'none';
-            
-            const ctx = document.getElementById('tagTrends').getContext('2d');
-            
-            // Filter out any datasets with empty labels
-            const filteredDatasets = data.datasets.filter(dataset => dataset.label !== "");
-            
-            // Create the chart
-            const chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: filteredDatasets.map(dataset => ({
-                        label: dataset.label,
-                        data: dataset.data,
-                        borderColor: dataset.borderColor,
-                        backgroundColor: dataset.borderColor.replace('50%)', '90%)'),
-                        borderWidth: 3,
-                        tension: 0.3,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        fill: false
-                    }))
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.dataset.label || '';
-                                    const value = context.parsed.y;
-                                    return `${label}: ${(value * 100).toFixed(2)}%`;
-                                }
-                            }
-                        }
+    // Function to create chart
+    async function createChart() {
+        const data = await fetchData();
+        if (!data) return;
+        
+        document.getElementById('loading').style.display = 'none';
+        
+        const ctx = document.getElementById('tagTrends').getContext('2d');
+        
+        const filteredDatasets = data.datasets.filter(dataset => dataset.label !== "");
+        
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: filteredDatasets.map(dataset => ({
+                    label: dataset.label,
+                    data: dataset.data,
+                    borderColor: dataset.borderColor,
+                    backgroundColor: dataset.borderColor.replace('50%)', '90%)'),
+                    borderWidth: 3,
+                    tension: 0.3,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    fill: false
+                }))
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
                     },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Year',
-                                font: {
-                                    size: 14,
-                                    weight: 'bold'
-                                }
-                            },
-                            grid: {
-                                display: false
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Normalized Frequency',
-                                font: {
-                                    size: 14,
-                                    weight: 'bold'
-                                }
-                            },
-                            ticks: {
-                                callback: value => (value * 100).toFixed(0) + '%'
-                            },
-                            beginAtZero: true
-                        }
-                    },
-                    interaction: {
+                    tooltip: {
                         mode: 'nearest',
-                        axis: 'x',
-                        intersect: false
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.dataset.label || '';
+                                const value = context.parsed.y;
+                                return `${label}: ${(value * 100).toFixed(2)}%`;
+                            },
+                            // NEW: Title shows tag name on hover
+                            title: function(context) {
+                                return context[0].dataset.label;
+                            }
+                        }
                     }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Year',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Normalized Frequency',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: value => (value * 100).toFixed(0) + '%'
+                        },
+                        beginAtZero: true
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'dataset', // NEW: show label on line hover
+                    intersect: false
                 }
-            });
-            
-            // Create custom legend
-            createCustomLegend(chart, filteredDatasets);
-        }
+            }
+        });
+
+        createCustomLegend(chart, filteredDatasets);
+    }
         
         // Function to create custom interactive legend
         function createCustomLegend(chart, datasets) {
