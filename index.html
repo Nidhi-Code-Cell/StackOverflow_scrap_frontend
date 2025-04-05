@@ -9,7 +9,7 @@
   <canvas id="tagChart" width="1000" height="500"></canvas>
 
   <script>
-    fetch("https://yourusername.pythonanywhere.com/api/graphs")
+    fetch("https://nidhisu.pythonanywhere.com/api/graphs")
       .then(res => res.json())
       .then(chartData => {
         const ctx = document.getElementById("tagChart").getContext("2d");
